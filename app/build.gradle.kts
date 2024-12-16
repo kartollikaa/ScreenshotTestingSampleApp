@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -34,6 +35,12 @@ android {
   buildFeatures {
     compose = true
   }
+
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+    }
+  }
 }
 
 dependencies {
@@ -53,4 +60,7 @@ dependencies {
   androidTestImplementation(libs.androidx.ui.test.junit4)
   debugImplementation(libs.androidx.ui.tooling)
   debugImplementation(libs.androidx.ui.test.manifest)
+  testImplementation(libs.androidx.ui.test.junit4)
+  testDebugImplementation(libs.roborazzi)
+  testDebugImplementation(libs.robolectric)
 }
