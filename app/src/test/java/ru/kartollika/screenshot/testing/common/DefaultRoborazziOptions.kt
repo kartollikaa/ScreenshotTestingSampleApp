@@ -17,10 +17,10 @@ import com.github.takahirom.roborazzi.captureRoboImage
 
 val DefaultRoborazziOptions =
   RoborazziOptions(
-      // Pixel-perfect matching
-      compareOptions = CompareOptions(changeThreshold = 0f),
-      // Reduce the size of the PNGs
-      recordOptions = RecordOptions(resizeScale = 0.5),
+    // Pixel-perfect matching
+    compareOptions = CompareOptions(changeThreshold = 0f),
+    // Reduce the size of the PNGs
+    recordOptions = RecordOptions(resizeScale = 0.5),
   )
 
 fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>.recordScreenshot(
@@ -29,14 +29,15 @@ fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>.r
 ) {
   this.activity.setContent {
     CompositionLocalProvider(
-        LocalInspectionMode provides true,
+      LocalInspectionMode provides true,
     ) {
       body()
     }
   }
 
   this.onRoot()
-      .captureRoboImage(
-          roborazziOptions = roborazziOptions,
-      )
+    .captureRoboImage(
+      filePath = "src/test/screenshots",
+      roborazziOptions = roborazziOptions,
+    )
 }
