@@ -23,7 +23,7 @@ class TextScreenshotTests {
     composeTestRule.recordScreenshot {
       MaterialTheme {
         Header(
-          text = "Text sample"
+          text = "Text samplee"
         )
       }
     }
