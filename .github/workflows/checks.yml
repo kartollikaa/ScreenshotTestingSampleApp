@@ -1,0 +1,26 @@
+checks: Checks build
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  screenshots:
+    name: Run screenshot testing
+
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Get source code 🛸
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          clean: true
+
+      - name: Run Screenshot Testing
+        uses: ./.github/workflows/roborazzi-screenshot-test.yml
+        with:
+          pull_request_number: ${{ github.event.pull_request.number }}
