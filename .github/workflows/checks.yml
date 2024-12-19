@@ -1,8 +1,8 @@
-checks: Checks build
+name: Checks build
 
 on:
-  pull_request:
-    types: [ opened, synchronize, reopened ]
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 defaults:
   run:
@@ -20,7 +20,60 @@ jobs:
           ref: ${{ github.head_ref }}
           clean: true
 
-      - name: Run Screenshot Testing
-        uses: ./.github/workflows/roborazzi-screenshot-test.yml
+      - name: Set up JDK 17 ☕️️
+        uses: actions/setup-java@v3
         with:
-          pull_request_number: ${{ github.event.pull_request.number }}
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Run all local screenshot tests (Roborazzi)
+        id: screenshotsverify
+        continue-on-error: true
+        run: ./gradlew verifyRoborazziDebug
+
+      - name: Process failed screenshot tests
+        if: steps.screenshotsverify.outcome == 'failure'
+        id: failed-screenshots
+        run: "./.github/scripts/update_screenshots.sh"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ secrets.GITHUB_REPOSITORY }}
+          PULL_REQUEST_BRANCH: ${{ github.head_ref }}
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Roborazzi report'
+
+      - name: Report Roborazzi success
+        if: steps.screenshotsverify.outcome == 'success'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ### 🤖 Roborazzi report
+            ✅ **Screenshot Tests Passed**
+          edit-mode: replace
+
+      - name: Report Roborazzi failure
+        if: steps.screenshotsverify.outcome == 'failure'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ### 🤖 Roborazzi report
+            🚨 **Screenshot Tests Failed**
+            ***
+            [See differences](${{ steps.failed-screenshots.outputs.PULL_REQUEST_URL }})
+            Merge the branch if it's an intentional change. Otherwise fix UI and push new changes in current branch
+          edit-mode: replace
+
+      # Runs only if previous steps failed
+      - name: Fail Job Explicitly if Tests Failed
+        if: steps.screenshotsverify.outcome == 'failure'
+        run: exit 1
